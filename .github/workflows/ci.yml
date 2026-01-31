@@ -1,0 +1,48 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    workflow_dispatch:
+
+jobs:
+    ci:
+        name: ${{ matrix.recipe }} (${{ matrix.arch }})
+        runs-on: ${{ matrix.runner }}
+        container:
+            image: ghcr.io/tara-zero/double-compresso-ci-base:main-2026-01-31
+
+        strategy:
+            fail-fast: false
+            matrix:
+                recipe:
+                    - fw-pico2w-build
+                    - fw-pico2w-build-release
+                    - cli-build-linux-release
+                    - cli-build-windows-release
+                    - gui-build-linux-release
+                    - gui-build-windows-release
+                    - apk-build
+                    - apk-build-release
+                arch:
+                    - x86_64
+                    - aarch64
+                include:
+                    - arch: x86_64
+                      runner: ubuntu-latest
+                    - arch: aarch64
+                      runner: ubuntu-22.04-arm
+                exclude:
+                    - recipe: apk-build
+                      arch: aarch64
+                    - recipe: apk-build-release
+                      arch: aarch64
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v6
+
+            - name: Run CI recipe
+              run: just ${{ matrix.recipe }}
