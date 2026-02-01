@@ -4,7 +4,7 @@
 [group("Firmware for Raspberry Pi Pico 2 W")]
 fw-pico2w-bloat *args:
     # TODO: https://github.com/casey/just/issues/1988
-    @{{just_executable()}} _fw-pico2w-bloat "${@}"
+    @just _fw-pico2w-bloat "${@}"
 
 [doc("[D] Build debug firmware")]
 [group("Firmware for Raspberry Pi Pico 2 W")]
