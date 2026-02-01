@@ -1,4 +1,7 @@
-# This is included into justfiles outside of devcontainer.
+# This is included into justfiles inside of devcontainer.
+
+# GitHub runners replace image's HOME with some nonsense.
+export HOME := "/root"
 
 cicli := "python3 -m cicli.main --inside-devcontainer"
 
