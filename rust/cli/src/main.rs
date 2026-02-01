@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+use ::std::collections::HashMap;
+
 use btleplug::api::bleuuid::BleUuid;
 use btleplug::api::{Central, CentralEvent, Manager as _, Peripheral as _, ScanFilter};
 use btleplug::platform::Manager;
@@ -30,8 +32,14 @@ async fn main() {
     let adapter = adapters.pop().unwrap();
     let mut events = adapter.events().await.unwrap();
     // TODO: Scan filtering is inconsistent across OSes.
-    adapter.start_scan(ScanFilter::default()).await.unwrap();
+    adapter
+        .start_scan(ScanFilter {
+            services: vec![GATT_SERVICE_FW],
+        })
+        .await
+        .unwrap();
 
+    let mut discovered = HashMap::new();
     while let Some(event) = events.next().await {
         match event {
             CentralEvent::DeviceDiscovered(id) => {
@@ -47,7 +55,14 @@ async fn main() {
                     .map(|p| p.services.as_slice())
                     .unwrap_or_else(|| &[]);
 
+                // According to the doc, portable application must both
+                // set at least one service UUID in the scan filter and
+                // check that the peripheral actually advertises the required service.
+                //
+                // Also, it seems that Windows treats the list of services in a filter as
+                // an AND filter: https://github.com/deviceplug/btleplug/issues/370#issuecomment-3448533811
                 if services.contains(&GATT_SERVICE_FW) {
+                    discovered.insert(id.clone(), local_name.to_string());
                     info!(
                         "BLE device discovered: {:?} ({:?})",
                         local_name,
@@ -66,6 +81,15 @@ async fn main() {
 
             CentralEvent::DeviceUpdated(id) => {
                 debug!("BLE device updated: {:?}", id.to_string());
+
+                // TODO: Remove device from list when it's not updated for some time.
+                if discovered.contains_key(&id) {
+                    info!(
+                        "BLE device updated: {:?} ({:?})",
+                        discovered[&id],
+                        id.to_string()
+                    );
+                }
             }
 
             CentralEvent::DeviceDisconnected(id) => {
