@@ -3,6 +3,9 @@
 set shell := ["sh", "-ceu"]
 set positional-arguments := true
 
+slash := if os() == "windows" { "\\" } else { "/" }
+pathsep := if os() == "windows" { ";" } else { ":" }
+
 rust_windows_target := if arch() == "x86_64" { f"{{arch()}}-pc-windows-gnu" } else { f"{{arch()}}-pc-windows-gnullvm" }
 
 alias help := list

@@ -1,6 +1,6 @@
 # This is included into source root justfiles.
 
-export PYTHONPATH := justfile_directory() + "/ci" + if env("PYTHONPATH", "") == "" { "" } else { ":" + env("PYTHONPATH") }
+export PYTHONPATH := justfile_directory() + f"{{ slash }}ci" + if env("PYTHONPATH", "") == "" { "" } else { pathsep + env("PYTHONPATH") }
 src_root_dir := "."
 kotlin_dir := "./kotlin"
 rust_dir := "./rust"
