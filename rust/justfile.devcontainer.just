@@ -40,6 +40,14 @@ _exe-build-windows profile package:
         --target "{{ rust_windows_target }}" \
         --profile "{{ profile }}" \
         --package "{{ package }}"
+    # Strip `.debug_gdb_scripts` to fix `cannot execute binary file: Exec format error`.
+    # Also see https://github.com/rust-lang/rust/issues/25229
+    # TODO: Keep original file.
+    if [ "{{ profile }}" == "dev" ]; then \
+        $( uname --machine )-w64-mingw32-strip \
+            --remove-section ".debug_gdb_scripts" \
+            target/{{ rust_windows_target }}/debug/{{ package }}.exe; \
+    fi
 
 [doc("[D] Clean Rust subproject")]
 rust-clean:
