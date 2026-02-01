@@ -20,6 +20,14 @@ sudo dnf install android-tools
 Note that `probe-rs` is required to work with firmware on real hardware and it may require additional setup,
 see https://probe.rs/docs/getting-started/probe-setup/ for details.
 
+For Android development, install Android Studio:
+
+```bash
+sudo flatpak install flathub com.google.AndroidStudio
+# On systems with SELinux (like Fedora) you may need additional configuration:
+# https://github.com/flathub/com.google.AndroidStudio/issues/234
+```
+
 ### Windows
 
 In PowerShell:
@@ -49,7 +57,7 @@ Then add Git Bash profile to Windows Terminal:
 * change "Starting directory" to "%USERPROFILE%" (uncheck "Use parent process directory");
 * click "Save";
 
-No open Git Bash from the same \[**V**\] menu and customize the shell:
+Now you can open Git Bash from the same \[**V**\] menu and customize the shell:
 
 ```bash
 # Remove screen flickering on "notifications":
@@ -72,7 +80,13 @@ echo "source <(podman completion bash)" >>~/.bash_profile
 echo "source <(just --completions bash)" >>~/.bash_profile
 ```
 
-Now you can restart Git Bash, clone the repository and use `just`.
+Finally, you can restart Git Bash, clone the repository and use `just` normally.
+
+For Android development, install Android Studio:
+
+```bash
+winget install -e --id Google.AndroidStudio
+```
 
 ## Commands
 
