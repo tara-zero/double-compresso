@@ -35,6 +35,10 @@ jobs:
                     - arch: aarch64
                       runner: ubuntu-22.04-arm
                 exclude:
+                    - recipe: fw-pico2w-build
+                      arch: aarch64
+                    - recipe: fw-pico2w-build-release
+                      arch: aarch64
                     - recipe: apk-build
                       arch: aarch64
                     - recipe: apk-build-release
