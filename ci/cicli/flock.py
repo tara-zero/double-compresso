@@ -4,8 +4,6 @@
 Cross-platform file-based locking module.
 """
 
-# TODO: Test this on Windows.
-
 import sys
 from contextlib import contextmanager
 

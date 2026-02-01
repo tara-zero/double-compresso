@@ -18,3 +18,5 @@ USB protocol:
 * Design OTA firmware update protocol:
   * https://github.com/vovagorodok/ArduinoBleOTA/blob/0d714e64e891919462814622cc537a8b16282dff/tools/uploader.py
 * Apply shell aliases to `just devsh ...`.
+* Add `~/.inputrc` into the base image to disable audible bell.
+* Change shell command history size inside the base image.
