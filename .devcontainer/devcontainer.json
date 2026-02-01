@@ -14,7 +14,8 @@
     "BUILDAH_LAYERS": "${localEnv:BUILDAH_LAYERS}",
     "ADB_TRACE": "${localEnv:ADB_TRACE}",
     "ANDROID_SERIAL": "${localEnv:ANDROID_SERIAL}",
-    "ANDROID_LOG_TAGS": "${localEnv:ANDROID_LOG_TAGS}"
+    "ANDROID_LOG_TAGS": "${localEnv:ANDROID_LOG_TAGS}",
+    "CI": "${localEnv:CI}"
   },
   "postStartCommand": "just --justfile /workspaces/*/justfile.devcontainer.just _devcontainer-post-start-command"
 }

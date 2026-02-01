@@ -1,4 +1,4 @@
-gradle := "./gradlew --warning-mode \"all\" --console \"verbose\" --stacktrace"
+gradle := f"./gradlew --warning-mode \"all\" --console \"{{ if lowercase(env('CI', '')) == 'true' { 'colored' } else { 'verbose' } }}\" --stacktrace"
 
 import "../ci/just/all.inc.just"
 import "../ci/just/conf.inc.just"
