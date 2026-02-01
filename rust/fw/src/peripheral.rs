@@ -73,7 +73,7 @@ where
 
     let _ = join(ble_task(runner), async {
         loop {
-            match advertise("Trouble Example", &mut peripheral, &server).await {
+            match advertise("TrouBLE!", &mut peripheral, &server).await {
                 Ok(conn) => {
                     let a = gatt_events_task(&server, &conn);
                     let b = custom_task(&server, &conn);
@@ -170,7 +170,10 @@ async fn advertise<'values, 'server, C: Controller>(
     peripheral: &mut Peripheral<'values, C, DefaultPacketPool>,
     server: &'server Server<'values>,
 ) -> Result<GattConnection<'values, 'server, DefaultPacketPool>, BleHostError<C::Error>> {
-    let mut advertiser_data = [0; 38];
+    // It seems that the maximum length of the advertisement data is 31 bytes.
+    // https://stackoverflow.com/questions/33535404/whats-the-maximum-length-of-a-ble-manufacturer-specific-data-ad
+    // However, larger advertisements work with Linux (but not Windows).
+    let mut advertiser_data = [0; 31];
     let len = AdStructure::encode_slice(
         &[
             AdStructure::Flags(LE_GENERAL_DISCOVERABLE | BR_EDR_NOT_SUPPORTED),
