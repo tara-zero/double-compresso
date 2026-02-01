@@ -1,6 +1,8 @@
 [workspace]
 members = [
     "cli",
+    "common",
+    "common-client",
     "fw",
     "gui",
 ]
@@ -67,6 +69,14 @@ features = [
 
 [workspace.dependencies.display-interface-spi]
 version = "0.5.0"
+default-features = false
+
+[workspace.dependencies.double-compresso-common]
+path = "common"
+default-features = false
+
+[workspace.dependencies.double-compresso-common-client]
+path = "common-client"
 default-features = false
 
 [workspace.dependencies.eframe]
@@ -225,6 +235,7 @@ features = [
 
 [workspace.dependencies.trouble-host]
 version = "0.5.1"
+default-features = false
 features = [
     "default-packet-pool",
     "default-packet-pool-mtu-128",
@@ -235,6 +246,10 @@ features = [
     "l2cap-sdu-reassembly-optimization",
     #"security",  # TODO: Do we need pairing and security?
 ]
+
+[workspace.dependencies.uuid]
+version = "1.20.0"
+default-features = false
 
 [workspace.dependencies.winit]
 version = "0.30.12"

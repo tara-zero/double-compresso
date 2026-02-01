@@ -13,10 +13,12 @@ categories = { workspace = true }
 
 [dependencies]
 btleplug = { workspace = true }
+double-compresso-common = { workspace = true }
 env_logger = { workspace = true }
 futures = { workspace = true }
 log = { workspace = true }
 tokio = { workspace = true }
+uuid = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 mimalloc = { workspace = true }

@@ -1243,12 +1243,22 @@ name = "double-compresso-cli"
 version = "0.0.0"
 dependencies = [
  "btleplug",
+ "double-compresso-common",
  "env_logger",
  "futures",
  "log",
  "mimalloc",
  "tokio",
+ "uuid",
 ]
+
+[[package]]
+name = "double-compresso-common"
+version = "0.0.0"
+
+[[package]]
+name = "double-compresso-common-client"
+version = "0.0.0"
 
 [[package]]
 name = "double-compresso-fw"
@@ -1261,6 +1271,7 @@ dependencies = [
  "defmt-rtt",
  "display-interface",
  "display-interface-spi",
+ "double-compresso-common",
  "embassy-executor",
  "embassy-futures",
  "embassy-rp",

@@ -4,7 +4,12 @@ use btleplug::api::bleuuid::BleUuid;
 use btleplug::api::{Central, CentralEvent, Manager as _, Peripheral as _, ScanFilter};
 use btleplug::platform::Manager;
 use futures::stream::StreamExt;
-use log::info;
+use log::{debug, info};
+use uuid::Uuid;
+
+const GATT_SERVICE_FW: Uuid = Uuid::from_u128(u128::from_le_bytes(
+    ::double_compresso_common::bt::GATT_SERVICE_FW,
+));
 
 #[cfg(target_os = "windows")]
 #[global_allocator]
@@ -12,7 +17,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[tokio::main]
 async fn main() {
-    env_logger::init_from_env(env_logger::Env::new().filter_or("RUST_LOG", "debug"));
+    env_logger::init_from_env(env_logger::Env::new().filter_or("RUST_LOG", "info"));
 
     let manager = Manager::new().await.unwrap();
     let mut adapters = manager.adapters().await.unwrap();
@@ -24,6 +29,7 @@ async fn main() {
 
     let adapter = adapters.pop().unwrap();
     let mut events = adapter.events().await.unwrap();
+    // TODO: Scan filtering is inconsistent across OSes.
     adapter.start_scan(ScanFilter::default()).await.unwrap();
 
     while let Some(event) = events.next().await {
@@ -31,31 +37,46 @@ async fn main() {
             CentralEvent::DeviceDiscovered(id) => {
                 let peripheral = adapter.peripheral(&id).await.unwrap();
                 let properties = peripheral.properties().await.unwrap();
-                let name = properties.and_then(|p| p.local_name).unwrap_or_default();
-                info!("BLE device discovered: {:?} ({:?})", name, id.to_string());
+                let local_name = properties
+                    .as_ref()
+                    .and_then(|p| p.local_name.as_ref())
+                    .map(|ln| ln.as_str())
+                    .unwrap_or_else(|| "");
+                let services = properties
+                    .as_ref()
+                    .map(|p| p.services.as_slice())
+                    .unwrap_or_else(|| &[]);
+
+                if services.contains(&GATT_SERVICE_FW) {
+                    info!(
+                        "BLE device discovered: {:?} ({:?})",
+                        local_name,
+                        id.to_string()
+                    );
+                }
             }
 
             CentralEvent::StateUpdate(state) => {
-                info!("BLE adapter state update: {:?}", state);
+                debug!("BLE adapter state update: {:?}", state);
             }
 
             CentralEvent::DeviceConnected(id) => {
-                info!("BLE device connected: {:?}", id.to_string());
+                debug!("BLE device connected: {:?}", id.to_string());
             }
 
             CentralEvent::DeviceUpdated(id) => {
-                info!("BLE device updated: {:?}", id.to_string());
+                debug!("BLE device updated: {:?}", id.to_string());
             }
 
             CentralEvent::DeviceDisconnected(id) => {
-                info!("BLE device disconnected: {:?}", id.to_string());
+                debug!("BLE device disconnected: {:?}", id.to_string());
             }
 
             CentralEvent::ManufacturerDataAdvertisement {
                 id,
                 manufacturer_data,
             } => {
-                info!(
+                debug!(
                     "BLE manufacturer data advertisement: {:?}, {:?}",
                     id.to_string(),
                     manufacturer_data
@@ -63,7 +84,7 @@ async fn main() {
             }
 
             CentralEvent::ServiceDataAdvertisement { id, service_data } => {
-                info!(
+                debug!(
                     "BLE service data advertisement: {:?}, {:?}",
                     id.to_string(),
                     service_data
@@ -73,7 +94,7 @@ async fn main() {
             CentralEvent::ServicesAdvertisement { id, services } => {
                 let services: Vec<String> =
                     services.into_iter().map(|s| s.to_short_string()).collect();
-                info!(
+                debug!(
                     "BLE services advertisement: {:?}, {:?}",
                     id.to_string(),
                     services

@@ -6,6 +6,8 @@ use ::embassy_futures::select::select;
 use ::embassy_time::Timer;
 use ::trouble_host::prelude::*;
 
+use ::double_compresso_common::bt::{GATT_CHAR_FW_VER, GATT_SERVICE_FW};
+
 /// Max number of connections
 const CONNECTIONS_MAX: usize = 1;
 
@@ -15,7 +17,15 @@ const L2CAP_CHANNELS_MAX: usize = 2; // Signal + att
 // GATT Server definition
 #[gatt_server]
 struct Server {
+    firmware_service: FirmwareService,
     battery_service: BatteryService,
+}
+
+/// Firmware version information and OTA update service.
+#[gatt_service(uuid = GATT_SERVICE_FW)]
+struct FirmwareService {
+    #[characteristic(uuid = GATT_CHAR_FW_VER, read, value = 10)]
+    version: u8,
 }
 
 /// Battery service
@@ -56,7 +66,8 @@ where
     info!("Starting advertising and GATT service");
     let server = Server::new_with_config(GapConfig::Peripheral(PeripheralConfig {
         name: "TrouBLE",
-        appearance: &appearance::power_device::GENERIC_POWER_DEVICE,
+        appearance:
+            &appearance::industrial_measurement_device::GENERIC_INDUSTRIAL_MEASUREMENT_DEVICE,
     }))
     .unwrap();
 
@@ -159,11 +170,11 @@ async fn advertise<'values, 'server, C: Controller>(
     peripheral: &mut Peripheral<'values, C, DefaultPacketPool>,
     server: &'server Server<'values>,
 ) -> Result<GattConnection<'values, 'server, DefaultPacketPool>, BleHostError<C::Error>> {
-    let mut advertiser_data = [0; 31];
+    let mut advertiser_data = [0; 38];
     let len = AdStructure::encode_slice(
         &[
             AdStructure::Flags(LE_GENERAL_DISCOVERABLE | BR_EDR_NOT_SUPPORTED),
-            AdStructure::ServiceUuids16(&[[0x0f, 0x18]]),
+            AdStructure::ServiceUuids128(&[GATT_SERVICE_FW]),
             AdStructure::CompleteLocalName(name.as_bytes()),
         ],
         &mut advertiser_data[..],
