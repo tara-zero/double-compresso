@@ -25,8 +25,35 @@ categories = [
     "hardware-support",
 ]
 
+[workspace.dependencies.anyhow]
+version = "1.0.100"
+default-features = false
+features = [
+    "std",
+]
+
 [workspace.dependencies.btleplug]
 version = "0.11.8"
+default-features = false
+
+[workspace.dependencies.clap]
+version = "4.5.56"
+default-features = false
+features = [
+    "std",
+    "color",
+    "help",
+    "usage",
+    "error-context",
+    "suggestions",
+
+    "derive",
+    "cargo",
+    "wrap_help",
+]
+
+[workspace.dependencies.const_format]
+version = "0.2.35"
 default-features = false
 
 [workspace.dependencies.cortex-m-rt]
@@ -161,27 +188,11 @@ features = [
     "async",
 ]
 
-[workspace.dependencies.env_logger]
-version = "0.11.8"
-default-features = false
-features = [
-    "auto-color",
-    "humantime",
-    "regex",
-]
-
 [workspace.dependencies.futures]
 version = "0.3.31"
 default-features = false
 features = [
     "async-await",
-]
-
-[workspace.dependencies.log]
-version = "0.4.29"
-default-features = false
-features = [
-    "std",
 ]
 
 [workspace.dependencies.mimalloc]
@@ -190,6 +201,10 @@ default-features = false
 features = [
     "v3",
 ]
+
+[workspace.dependencies.never-say-never]
+version = "6.6.666"
+default-features = false
 
 [workspace.dependencies.oled_async]
 git = "https://github.com/cschuhen/oled_drivers"
@@ -231,6 +246,27 @@ version = "1.49.0"
 default-features = false
 features = [
     "full",  # TODO: Reduce feature set to a minimal one.
+]
+
+[workspace.dependencies.tokio-stream]
+version = "0.1.18"
+default-features = false
+
+[workspace.dependencies.tracing]
+version = "0.1.44"
+default-features = false
+features = ["std"]
+
+[workspace.dependencies.tracing-subscriber]
+version = "0.3.22"
+default-features = false
+features = [
+    "ansi",
+    "chrono",
+    "env-filter",
+    "fmt",
+    "smallvec",
+    "tracing-log",
 ]
 
 [workspace.dependencies.trouble-host]

@@ -1,129 +1,124 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use ::std::collections::HashMap;
+use ::std::env;
+use ::std::io::stderr;
+use ::std::process::exit;
 
-use btleplug::api::bleuuid::BleUuid;
-use btleplug::api::{Central, CentralEvent, Manager as _, Peripheral as _, ScanFilter};
-use btleplug::platform::Manager;
-use futures::stream::StreamExt;
-use log::{debug, info};
-use uuid::Uuid;
+use ::anyhow::Context;
+use ::clap::Parser;
+use ::tracing::{error, level_filters::LevelFilter};
+use ::tracing_subscriber::EnvFilter;
+use ::tracing_subscriber::layer::SubscriberExt;
+use ::tracing_subscriber::util::SubscriberInitExt;
 
-const GATT_SERVICE_FW: Uuid = Uuid::from_u128(u128::from_le_bytes(
-    ::double_compresso_common::bt::GATT_SERVICE_FW,
-));
+use ::double_compresso_common_client::bt::{self, ScanEvent, next_scan_event};
+use ::double_compresso_common_client::error::Result;
+
+mod cli;
 
 #[cfg(target_os = "windows")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[tokio::main]
-async fn main() {
-    env_logger::init_from_env(env_logger::Env::new().filter_or("RUST_LOG", "info"));
-
-    let manager = Manager::new().await.unwrap();
-    let mut adapters = manager.adapters().await.unwrap();
-    info!("Found {} Bluetooth adapters:", adapters.len());
-    for adapter in adapters.iter() {
-        let info = adapter.adapter_info().await.unwrap();
-        info!("    {}", info);
+fn main() {
+    unsafe {
+        // SAFETY: This is safe because we are doing this right at the start before creating any other threads.
+        env::set_var("RUST_BACKTRACE", "full");
     }
 
-    let adapter = adapters.pop().unwrap();
-    let mut events = adapter.events().await.unwrap();
-    // TODO: Scan filtering is inconsistent across OSes.
-    adapter
-        .start_scan(ScanFilter {
-            services: vec![GATT_SERVICE_FW],
-        })
-        .await
-        .unwrap();
+    // Parse command line arguments.
+    let args = cli::Cli::parse();
 
-    let mut discovered = HashMap::new();
-    while let Some(event) = events.next().await {
-        match event {
-            CentralEvent::DeviceDiscovered(id) => {
-                let peripheral = adapter.peripheral(&id).await.unwrap();
-                let properties = peripheral.properties().await.unwrap();
-                let local_name = properties
-                    .as_ref()
-                    .and_then(|p| p.local_name.as_ref())
-                    .map(|ln| ln.as_str())
-                    .unwrap_or_else(|| "");
-                let services = properties
-                    .as_ref()
-                    .map(|p| p.services.as_slice())
-                    .unwrap_or_else(|| &[]);
+    // Configure logging.
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer().with_writer(stderr))
+        .with(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .init();
 
-                // According to the doc, portable application must both
-                // set at least one service UUID in the scan filter and
-                // check that the peripheral actually advertises the required service.
-                //
-                // Also, it seems that Windows treats the list of services in a filter as
-                // an AND filter: https://github.com/deviceplug/btleplug/issues/370#issuecomment-3448533811
-                if services.contains(&GATT_SERVICE_FW) {
-                    discovered.insert(id.clone(), local_name.to_string());
-                    info!(
-                        "BLE device discovered: {:?} ({:?})",
-                        local_name,
-                        id.to_string()
-                    );
-                }
-            }
+    let return_code = match start_async(args) {
+        Ok(()) => 0,
 
-            CentralEvent::StateUpdate(state) => {
-                debug!("BLE adapter state update: {:?}", state);
-            }
+        Err(error) => {
+            error!("{:?}", error);
+            1
+        }
+    };
 
-            CentralEvent::DeviceConnected(id) => {
-                debug!("BLE device connected: {:?}", id.to_string());
-            }
+    exit(return_code)
+}
 
-            CentralEvent::DeviceUpdated(id) => {
-                debug!("BLE device updated: {:?}", id.to_string());
+fn start_async(args: cli::Cli) -> Result<()> {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_io()
+        .enable_time()
+        .worker_threads(1)
+        .max_blocking_threads(1)
+        .thread_name("amain")
+        .build()
+        .context("Unable to initialize Tokio async runtime")?;
 
-                // TODO: Remove device from list when it's not updated for some time.
-                if discovered.contains_key(&id) {
-                    info!(
-                        "BLE device updated: {:?} ({:?})",
-                        discovered[&id],
-                        id.to_string()
-                    );
-                }
-            }
+    let _runtime_guard = runtime.enter();
 
-            CentralEvent::DeviceDisconnected(id) => {
-                debug!("BLE device disconnected: {:?}", id.to_string());
-            }
+    runtime.block_on(async_main(args))?;
 
-            CentralEvent::ManufacturerDataAdvertisement {
-                id,
-                manufacturer_data,
-            } => {
-                debug!(
-                    "BLE manufacturer data advertisement: {:?}, {:?}",
-                    id.to_string(),
-                    manufacturer_data
-                );
-            }
+    Ok(())
+}
 
-            CentralEvent::ServiceDataAdvertisement { id, service_data } => {
-                debug!(
-                    "BLE service data advertisement: {:?}, {:?}",
-                    id.to_string(),
-                    service_data
-                );
-            }
-
-            CentralEvent::ServicesAdvertisement { id, services } => {
-                let services: Vec<String> =
-                    services.into_iter().map(|s| s.to_short_string()).collect();
-                debug!(
-                    "BLE services advertisement: {:?}, {:?}",
-                    id.to_string(),
-                    services
-                );
+async fn async_main(args: cli::Cli) -> Result<()> {
+    match &args.subcommand {
+        cli::SubCommand::BluetoothAdapters => {
+            let list = bt::StateList::state_new().await?;
+            for name in list.adapter_names() {
+                println!("{}", name);
             }
         }
+
+        cli::SubCommand::Scan(scan) => {
+            let (_scan, mut rx_scan_event) = start_scan(&scan.bt).await?;
+            loop {
+                let event = next_scan_event(&mut rx_scan_event).await?;
+                match event {
+                    ScanEvent::Found(addr, _) => {
+                        println!("found {}", addr.to_string());
+                    }
+
+                    ScanEvent::Lost(addr) => {
+                        println!("lost {}", addr.to_string());
+                    }
+                }
+            }
+        }
+
+        cli::SubCommand::Speedtest(speedtest) => {
+            let (scan, mut rx_scan_event) = start_scan(&speedtest.bt).await?;
+
+            let id = loop {
+                if let ScanEvent::Found(bt_addr, id) = next_scan_event(&mut rx_scan_event).await? {
+                    if speedtest.bt_addr.device.is_none()
+                        || (Some(bt_addr) == speedtest.bt_addr.device)
+                    {
+                        break id;
+                    }
+                }
+            };
+
+            scan.state_next(&id).await.map_err(|(e, _)| e)?;
+        }
     }
+
+    Ok(())
+}
+
+async fn start_scan(bt: &cli::CommonBTOpts) -> Result<(bt::StateScan, bt::ScanEventStream)> {
+    let bluetooth_adapter = if let Some(bluetooth_adapter) = bt.bluetooth_adapter.as_ref() {
+        bt::AdapterSelection::PartialName(bluetooth_adapter)
+    } else {
+        bt::AdapterSelection::Any
+    };
+    let list = bt::StateList::state_new().await?;
+    list.state_next(bluetooth_adapter).await
 }

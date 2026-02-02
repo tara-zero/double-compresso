@@ -1,12 +1,25 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+use ::const_format::concatcp;
 use ::defmt::{error, info, warn};
 use ::embassy_futures::join::join;
 use ::embassy_futures::select::select;
 use ::embassy_time::Timer;
 use ::trouble_host::prelude::*;
 
-use ::double_compresso_common::bt::{GATT_CHAR_FW_VER, GATT_SERVICE_FW};
+use ::double_compresso_common::bt::{
+    CUR_VER_OTA, CUR_VER_PROTO, GATT_CHAR_COMMAND, GATT_DESC_FW_VER, GATT_SERVICE_FW,
+};
+
+const FW_VER: &str = concatcp!(
+    CUR_VER_OTA,
+    ',',
+    env!("CARGO_PKG_NAME"),
+    ',',
+    env!("CARGO_PKG_VERSION"),
+    ',',
+    CUR_VER_PROTO
+);
 
 /// Max number of connections
 const CONNECTIONS_MAX: usize = 1;
@@ -24,8 +37,9 @@ struct Server {
 /// Firmware version information and OTA update service.
 #[gatt_service(uuid = GATT_SERVICE_FW)]
 struct FirmwareService {
-    #[characteristic(uuid = GATT_CHAR_FW_VER, read, value = 10)]
-    version: u8,
+    #[descriptor(uuid = GATT_DESC_FW_VER, read, value = FW_VER)]
+    #[characteristic(uuid = GATT_CHAR_COMMAND, write)]
+    command: u8,
 }
 
 /// Battery service

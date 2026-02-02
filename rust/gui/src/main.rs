@@ -5,7 +5,7 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 fn main() -> eframe::Result {
-    env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+    // TODO: Configure logging.
 
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()

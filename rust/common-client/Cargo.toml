@@ -10,3 +10,14 @@ repository = { workspace = true }
 readme = { workspace = true }
 keywords = { workspace = true }
 categories = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+btleplug = { workspace = true }
+double-compresso-common = { workspace = true }
+futures = { workspace = true }
+never-say-never = { workspace = true }
+tokio = { workspace = true }
+tokio-stream = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }

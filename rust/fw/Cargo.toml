@@ -12,6 +12,7 @@ keywords = { workspace = true }
 categories = { workspace = true }
 
 [dependencies]
+const_format = { workspace = true }
 cortex-m-rt = { workspace = true }
 cyw43 = { workspace = true }
 cyw43-pio = { workspace = true }
