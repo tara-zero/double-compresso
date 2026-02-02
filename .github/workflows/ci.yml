@@ -20,10 +20,8 @@ jobs:
                 recipe:
                     - fw-pico2w-build
                     - fw-pico2w-build-release
-                    - cli-build-linux-release
-                    - cli-build-windows-release
-                    - gui-build-linux-release
-                    - gui-build-windows-release
+                    - cli-build-linux-release gui-build-linux-release
+                    - cli-build-windows-release gui-build-windows-release
                     - apk-build
                     - apk-build-release
                 arch:
