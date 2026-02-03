@@ -27,6 +27,7 @@ except ImportError:
 
 from cicli.flock import flock
 from cicli.log import configure_logger
+from cicli.wsl import is_wsl_path, share_to_local
 
 _L = logging.getLogger(__name__)
 
@@ -258,6 +259,13 @@ def _ensure_devcontainer_is_running_unlocked(cont_cmd: str, devcontainer):
 
     if ps_devcontainer is None:
         _L.warning("Starting new devcontainer...")
+
+        if is_wsl_path(_SRC_ROOT):
+            # TODO: Test on Docker for Windows.
+            src_root = share_to_local(_SRC_ROOT)
+        else:
+            src_root = _SRC_ROOT
+
         cmd = [
             cont_cmd,
             "run",
@@ -266,7 +274,7 @@ def _ensure_devcontainer_is_running_unlocked(cont_cmd: str, devcontainer):
             "--detach",
             "--interactive",
             "--volume",
-            f"{_SRC_ROOT}:{_WORKSPACE_SRC_ROOT}:bind,z",
+            f"{src_root}:{_WORKSPACE_SRC_ROOT}:bind,z",
         ]
         cmd.extend(devcontainer.get("runArgs", ()))
         cmd.extend(

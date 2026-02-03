@@ -88,6 +88,20 @@ For Android development, install Android Studio:
 winget install -e --id Google.AndroidStudio
 ```
 
+Also, you may clone repository inside the WSL share to speedup devcontainer a bit:
+
+```bash
+# Navigate to home directory inside the Docker/Podman VM using Git Bash:
+cd //wsl.localhost/podman-machine-default/home/user
+
+# Clone repository:
+git clone https://github.com/tara-zero/double-compresso
+cd double-compresso
+
+# Configure git to not complain about weird file ownership:
+git config --global --add safe.directory "$( pwd )"
+```
+
 ## Commands
 
 Most of the things are done inside the Development Container. Some tasks require hardware access (USB or Bluetooth),
