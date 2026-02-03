@@ -17,7 +17,9 @@
     "ANDROID_LOG_TAGS": "${localEnv:ANDROID_LOG_TAGS}",
     "CI": "${localEnv:CI}",
     "RUSTFLAGS": "${localEnv:RUSTFLAGS}",
-    "RUST_LOG": "${localEnv:RUST_LOG}"
+    "RUST_LOG": "${localEnv:RUST_LOG}",
+    "RUST_LIB_BACKTRACE": "${localEnv:RUST_LIB_BACKTRACE}",
+    "RUST_BACKTRACE": "${localEnv:RUST_BACKTRACE}"
   },
   "postStartCommand": "just --justfile /workspaces/*/justfile.devcontainer.just _devcontainer-post-start-command"
 }
