@@ -1,5 +1,5 @@
 {
-  "image": "ghcr.io/tara-zero/double-compresso-ci-base:main-2026-01-31",
+  "image": "ghcr.io/tara-zero/double-compresso-ci-base:main-2026-02-24",
   "runArgs": ["--device", "/dev/fuse"],
   "remoteEnv": {
     "TERM": "${localEnv:TERM}",

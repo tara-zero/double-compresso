@@ -504,6 +504,8 @@ def _image_base_build(args, arch: str, tag: str):
             "--build-arg",
             f"rust_toolchain_profile={rust_toolchain['profile']}",
             "--build-arg",
+            f"rust_toolchain_components={','.join(rust_toolchain['components'])}",
+            "--build-arg",
             f"rust_toolchain_targets={' '.join(rust_toolchain['targets'])}",
             "--build-arg",
             f"android_build_tools_version={android_toolchain['android_build_tools_version']}",

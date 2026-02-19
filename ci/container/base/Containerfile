@@ -13,6 +13,7 @@ ARG pico_sdk_picotool_version="2.2.0-a4"
 
 ARG rust_toolchain_version
 ARG rust_toolchain_profile
+ARG rust_toolchain_components
 ARG rust_toolchain_targets
 
 ARG android_build_tools_version
@@ -55,6 +56,7 @@ RUN dnf \
         "man-pages" \
         "bat" \
         "fzf" \
+        "ripgrep" \
         "mlocate" \
         "procps-ng" \
         "psmisc" \
@@ -83,6 +85,7 @@ RUN dnf \
         "git" \
         "diffutils" \
         "patch" \
+        "tmux" \
         "strace" \
         "usbutils"
 
@@ -313,6 +316,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- \
         -y \
         --default-toolchain "${rust_toolchain_version}" \
         --profile "${rust_toolchain_profile}" \
+        --component "${rust_toolchain_components}" \
         --no-update-default-toolchain \
         --no-modify-path
 ENV PATH="/root/.cargo/bin:${PATH}"
@@ -337,6 +341,7 @@ RUN just --completions "bash" >/etc/bash_completion.d/just
 RUN cargo \
         install \
         --bins \
+        --locked \
         "wild-linker"
 
 # Install tools for embedded Rust.
@@ -376,6 +381,17 @@ RUN TARGET_CFLAGS="-D_WIN32_WINNT=0x601" cargo \
 RUN mv "/root/host-tools/bin/probe-rs.exe" "/opt/host-tools/"
 RUN mv "/root/host-tools/bin/elf2uf2-rs.exe" "/opt/host-tools/"
 RUN rm -rf "/root/host-tools"
+
+# Install `sccache`.
+RUN dnf \
+        install \
+        --assumeyes \
+        "openssl-devel"
+RUN cargo \
+        install \
+        --bins \
+        --features "all" \
+        "sccache"
 
 # Install JDK.
 RUN dnf \

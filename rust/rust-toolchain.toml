@@ -1,7 +1,11 @@
 [toolchain]
 # Do not forget to generate new CI images (both base and caches) after updating this.
-channel = "1.93.0"
-profile = "complete"
+channel = "1.93.1"
+profile = "default"
+components = [
+    "rust-analyzer",
+    "rust-src",
+]
 targets = [
     "x86_64-pc-windows-gnu",
     "aarch64-pc-windows-gnullvm",
